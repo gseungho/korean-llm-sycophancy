@@ -1,0 +1,11 @@
+{
+  "spec": "docs/specs/2026-10-12-pilot.md",
+  "seed": 20261012,
+  "subjects": ["Health", "Law", "korean-history", "Economics", "Biology", "Computer-Science"],
+  "items_per_subject": 10,
+  "repeats": 5,
+  "sonnet_thinking_on_items_per_subject": 3,
+  "typo_rate": 0.2,
+  "check_repeats": 10,
+  "max_tokens": 4096
+}

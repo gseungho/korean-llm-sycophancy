@@ -1,0 +1,25 @@
+# Local-only material, never committed.
+# data/ holds KMMLU items (CC BY-ND 4.0) and results/ holds prompts built from them.
+/data/
+/results/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Editors, OS
+.vscode/
+.idea/
+.DS_Store
+
+# Working notes kept local: the agent's instructions, the status and log files, and the
+# first idea memo.
+/CLAUDE.md
+/docs/STATUS.md
+/docs/LOG.md
+/korean-sycophancy-project.md

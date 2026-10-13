@@ -1,0 +1,9 @@
+{
+  "spec": "docs/specs/2026-10-13-followup-selfintro.md",
+  "source": "results/main",
+  "seed": 20261013,
+  "arms": [["haiku", "on"], ["haiku", "off"], ["sonnet", "off"]],
+  "levels": {"haiku": ["haeyo", "hae"], "sonnet": ["haeyo"]},
+  "max_tokens": 4096,
+  "n_boot": 2000
+}
