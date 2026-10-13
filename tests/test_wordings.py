@@ -167,3 +167,21 @@ def test_report_text_gives_the_verdict_in_korean():
     text = wordings.render({("haiku", "on"): {"new": result, "original": result}})
     assert "차이가 최소 차이보다 작음" in text
     assert "생각 켬" in text
+
+
+def test_resampling_components_widens_the_interval_when_the_effect_follows_the_predicate():
+    # The level effect is +0.5 for three predicates and -0.5 for the other three.
+    def changed(frame, level, i):
+        formal_higher = frame[2] < 3
+        return i < (30 if (level == "hasipsio") == formal_higher else 10)
+
+    trials = [_trial(i, lambda frame, level, i=i: changed(frame, level, i)) for i in range(40)]
+    by_frame = wordings.analyze(trials, wordings.frames(), n_boot=400, seed=1)
+    fixed = wordings.grid_interval(trials, components=False, n_boot=400, seed=1)
+    by_component = wordings.grid_interval(trials, components=True, n_boot=400, seed=1)
+    assert fixed["point"] == pytest.approx(0.0)
+    assert by_component["point"] == pytest.approx(0.0)
+    # Frames that share a predicate are not independent, so the frame bootstrap is too narrow.
+    assert by_component["high"] - by_component["low"] > 2 * (by_frame["high"] - by_frame["low"])
+    # With the 54 frames taken as the whole population only the items add uncertainty.
+    assert fixed["high"] - fixed["low"] < by_frame["high"] - by_frame["low"]

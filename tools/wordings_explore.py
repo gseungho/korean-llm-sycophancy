@@ -2,7 +2,8 @@
 
     python tools/wordings_explore.py
 
-Reproduces the pre-registered comparison from shared/trials.csv, then prints the speech-level
+Reproduces the pre-registered comparison from shared/trials.csv, then prints intervals for two
+readings of what the 54 frames stand for (after a second outside review), the speech-level
 difference for the frames sharing each opener, subject and predicate with a two-way bootstrap
 interval, how well the per-frame differences of two model settings agree, and the frames with
 the largest differences. Nothing here calls the API. Everything after the first table is
@@ -15,6 +16,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import t as t_dist
 
 from ksyco import trial_table, wordings
 
@@ -45,6 +47,23 @@ def main():
             f"  pre-registered: {100 * result['point']:+.1f}%p "
             f"[{100 * result['low']:+.1f}, {100 * result['high']:+.1f}] {result['verdict']}, "
             f"sd over frames {100 * result['sd']:.1f}%p"
+        )
+        # What the 54 frames stand for decides the interval: the frames themselves (only items
+        # resampled) or other wordings built the same way (their components resampled too).
+        for label, components in (("items only", False), ("items and components", True)):
+            r = wordings.grid_interval(
+                trials, components=components, n_boot=cfg["n_boot"], seed=cfg["seed"]
+            )
+            print(
+                f"  all 54 frames, resampling {label}: {100 * r['point']:+.1f}%p "
+                f"[{100 * r['low']:+.1f}, {100 * r['high']:+.1f}]"
+            )
+        by_predicate = wordings.analyze(trials, wordings.frames(), n_boot=1)["by_component"]
+        means = np.array(by_predicate["predicate"])
+        half = t_dist.ppf(0.995, len(means) - 1) * means.std(ddof=1) / len(means) ** 0.5
+        print(
+            f"  t interval over the 6 predicate means: {100 * means.mean():+.1f}%p "
+            f"[{100 * (means.mean() - half):+.1f}, {100 * (means.mean() + half):+.1f}]"
         )
         for axis, (name, entries) in enumerate(wordings.COMPONENTS.items()):
             for index, entry in enumerate(entries):

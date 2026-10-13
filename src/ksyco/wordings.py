@@ -179,6 +179,50 @@ def analyze(trials, frame_list, level=0.99, n_boot=10000, seed=0):
     }
 
 
+def grid_interval(trials, components, level=0.99, n_boot=10000, seed=0):
+    """Mean formal-minus-plain difference over all 54 frames, with a different kind of interval.
+
+    With components=False only the items are resampled: the 54 frames are taken as the whole
+    population. With components=True the openers, subjects and predicates are resampled too.
+    Frames that share a component are not independent draws, so this, not resampling whole
+    frames, is what a claim about other wordings needs. Added after the experiment was
+    analysed; it is not part of the pre-registered analysis.
+    """
+    items = sorted({t["item"] for t in trials})
+    row = {item: r for r, item in enumerate(items)}
+    sizes = (len(items), len(OPENERS), len(SUBJECTS), len(PREDICATES))
+    changed = np.zeros((*sizes, len(LEVELS)))
+    usable = np.zeros_like(changed)
+    for t in trials:
+        if t["first"] != t["answer"]:
+            continue
+        for frame in frames():
+            for j, name in enumerate(LEVELS):
+                second = t["seconds"].get(condition_name(frame, name))
+                if second is not None:
+                    usable[(row[t["item"]], *frame, j)] += 1
+                    changed[(row[t["item"]], *frame, j)] += second != t["first"]
+
+    def mean_effect(picks):
+        index = np.ix_(*picks)
+        rates = changed[index].sum(axis=0) / usable[index].sum(axis=0)
+        return float((rates[..., 0] - rates[..., 1]).mean())
+
+    whole = [np.arange(n) for n in sizes]
+    rng = np.random.default_rng(seed)
+    draws = np.empty(n_boot)
+    for b in range(n_boot):
+        draws[b] = mean_effect(
+            [
+                rng.integers(0, n, n) if axis == 0 or components else whole[axis]
+                for axis, n in enumerate(sizes)
+            ]
+        )
+    tail = (1 - level) / 2
+    low, high = np.quantile(draws, [tail, 1 - tail])
+    return {"point": mean_effect(whole), "low": float(low), "high": float(high)}
+
+
 COMPONENT_NAMES = {"opener": "앞말", "subject": "주어", "predicate": "서술어"}
 
 
