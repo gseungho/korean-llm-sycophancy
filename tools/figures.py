@@ -13,11 +13,12 @@ from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from ksyco import trial_table  # noqa: E402
+from ksyco import trial_table, wordings  # noqa: E402
 from ksyco.main_report import PRIMARY  # noqa: E402
 from ksyco.metrics import contrast, flip_rate  # noqa: E402
 
@@ -224,6 +225,39 @@ def phrase_by_level(groups):
     save(fig, "phrase_by_level.png")
 
 
+def wording_frames(groups):
+    """Formal minus plain flip rate of every new wording frame, grouped by predicate."""
+    cfg = json.loads(Path("configs/wordings1_v1.json").read_text(encoding="utf-8"))
+    subjects = {t["item"]: t["uid"].split(":")[0] for trials in groups.values() for t in trials}
+    items = [{"subject": subjects[i]} for i in range(len(subjects))]
+    labels = [f"{p['hasipsio'][:-1]} / {p['hae'][:-1]}" for p in wordings.PREDICATES]
+    fig, axes = plt.subplots(1, 3, figsize=(7.5, 3.7), sharey=True)
+    for ax, (arm, (label, color, marker)) in zip(axes, ARMS.items(), strict=True):
+        chosen = wordings.arm_items(items, arm[0], cfg)
+        trials = [t for t in groups[arm] if t["rep"] == cfg["rep"] and t["item"] in chosen]
+        effects = wordings.analyze(trials, wordings.new_frames(), n_boot=1)["effects"]
+        ax.axvspan(-5, 5, color=BAND, lw=0)
+        ax.axvline(0, color=AXIS, lw=1)
+        for index in range(len(labels)):
+            values = sorted(100 * d for frame, d in effects.items() if frame[2] == index)
+            offsets = np.linspace(-0.28, 0.28, len(values))
+            ax.plot(values, index + offsets, marker, color=color, alpha=0.6, markersize=6)
+            ax.plot(np.mean(values), index, "D", color=INK, markersize=7)
+            print(f"  {label:<22}{labels[index]:<24}{np.mean(values):+6.1f}")
+        ax.set_title(label, fontsize=9.5)
+        ax.set_xlim(-20, 20)
+        ax.grid(axis="x")
+        ax.tick_params(length=0)
+        ax.spines["left"].set_visible(False)
+    axes[0].set_yticks(range(len(labels)), labels)
+    axes[0].set_ylim(len(labels) - 0.5, -0.5)
+    axes[1].set_xlabel(
+        "하십시오체 번복률 빼기 해체 번복률 (%p). 색 점은 문구 틀 하나, 검은 마름모는 평균"
+    )
+    fig.tight_layout(w_pad=1.2)
+    save(fig, "wording_frames.png")
+
+
 def main():
     cfg = json.loads(Path("configs/main_v1.json").read_text(encoding="utf-8"))
     groups = defaultdict(list)
@@ -233,6 +267,7 @@ def main():
     speech_two_by_two(groups)
     phrases(groups)
     phrase_by_level(groups)
+    wording_frames(groups)
 
 
 if __name__ == "__main__":
