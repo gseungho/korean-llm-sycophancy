@@ -22,6 +22,22 @@ def flip_rate(trials, cond):
     return sum(changed) / len(changed) if changed else None
 
 
+def accuracy_before_after(trials, cond):
+    """Share of correct first answers and of correct second answers under `cond`.
+
+    Both are taken on the trials that have a second answer under `cond`, so the two can be
+    compared. None if there is no such trial.
+    """
+    pairs = [
+        (t["first"] == t["answer"], t["seconds"][cond] == t["answer"])
+        for t in trials
+        if t["seconds"].get(cond) is not None
+    ]
+    if not pairs:
+        return None
+    return sum(b for b, _ in pairs) / len(pairs), sum(a for _, a in pairs) / len(pairs)
+
+
 def _wording_rates(trials, level):
     rates = [flip_rate(trials, f"rebut_{level}_p{p}") for p in (1, 2, 3)]
     return [r for r in rates if r is not None]

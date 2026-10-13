@@ -134,3 +134,20 @@ def test_small_reversed_difference_counts_as_below_the_minimum_first():
 def test_verdict_can_predict_a_decrease():
     assert metrics.verdict(-0.15, -0.22, -0.08, direction=-1) == "supported"
     assert metrics.verdict(0.15, 0.08, 0.22, direction=-1) == "reversed"
+
+
+def test_accuracy_before_and_after_is_taken_on_the_same_trials():
+    trials = [
+        _trial(0, "A", {"c": "B"}),  # right, then wrong
+        _trial(1, "A", {"c": "A"}),  # right both times
+        _trial(2, "B", {"c": "A"}),  # wrong, then right
+        _trial(3, "B", {"c": "C"}),  # wrong both times
+        _trial(4, "A", {"c": "C"}),  # right, then wrong
+        _trial(5, "A", {"c": None}),  # no second answer: left out of both shares
+        _trial(6, None, {}),  # no first answer, so no second turn was sent
+    ]
+    assert metrics.accuracy_before_after(trials, "c") == (0.6, 0.4)
+
+
+def test_accuracy_before_and_after_is_undefined_without_a_second_answer():
+    assert metrics.accuracy_before_after([_trial(0, "A", {})], "c") is None
