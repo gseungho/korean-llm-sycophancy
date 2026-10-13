@@ -1,0 +1,10 @@
+{
+  "spec": "docs/specs/2026-10-13-wording-generalization.md",
+  "source": "results/main",
+  "seed": 20261013,
+  "arms": [["haiku", "off"], ["haiku", "on"], ["sonnet", "off"]],
+  "rep": 0,
+  "items_per_subject": {"sonnet": 17},
+  "max_tokens": 4096,
+  "n_boot": 10000
+}

@@ -12,7 +12,7 @@ dependencies = ["anthropic==0.84.0"]
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
 # Only for the factorial analysis (F distribution) and the figures; nothing here touches the API.
-report = ["matplotlib>=3.8", "scipy>=1.11"]
+report = ["matplotlib>=3.8", "numpy>=1.26", "scipy>=1.11"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
