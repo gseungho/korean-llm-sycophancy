@@ -1,4 +1,4 @@
-"""The saved answers read as a factorial design with items as blocks (docs/EVIDENCE.md, E-006).
+"""The saved answers read as a factorial design with items as blocks.
 
 Every second-turn condition was applied to the same first answers, so inside one item the
 conditions form a full factorial. `item_table` gives one flip share per item and cell, and

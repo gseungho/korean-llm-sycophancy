@@ -23,3 +23,11 @@ venv/
 /docs/STATUS.md
 /docs/LOG.md
 /korean-sycophancy-project.md
+
+# Working documents and generated figures, kept local: the repository holds what a rerun needs.
+# The documents as they last stood in the repository are at commit aca8c62.
+/docs/EVIDENCE.md
+/docs/RESEARCH_PLAN.md
+/docs/literature/
+/docs/figures/
+/tools/pilot_explore.py
