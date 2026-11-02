@@ -121,12 +121,8 @@ def second_requests(firsts, items, cfg):
     return requests
 
 
-def analyze(trials, frame_list, level=0.99, n_boot=10000, seed=0):
-    """Formal minus plain flip rate, averaged over frames, with items and frames both resampled.
-
-    The interval is a two-way bootstrap: each draw takes items and frames with replacement, so it
-    carries the uncertainty of having sampled these items and these wordings.
-    """
+def _flip_counts(trials, frame_list):
+    """Item, frame and level arrays of changed answers and of first-correct usable trials."""
     items = sorted({t["item"] for t in trials})
     row = {item: r for r, item in enumerate(items)}
     changed = np.zeros((len(items), len(frame_list), len(LEVELS)))
@@ -140,6 +136,49 @@ def analyze(trials, frame_list, level=0.99, n_boot=10000, seed=0):
                 if second is not None:
                     usable[row[t["item"]], k, j] += 1
                     changed[row[t["item"]], k, j] += second != t["first"]
+    return items, changed, usable
+
+
+def predicate_contrast(trials, frame_list, first, second, level=0.99, n_boot=10000, seed=0):
+    """Formal-minus-plain difference under predicate `first` minus under predicate `second`.
+
+    Each predicate's difference is the mean over its frames in `frame_list`. Only items are
+    resampled, since the two predicates are the ones the question is about. Added after the
+    wording experiment was analysed; it is not part of that pre-registered analysis.
+    """
+    items, changed, usable = _flip_counts(trials, frame_list)
+    a = [k for k, frame in enumerate(frame_list) if frame[2] == first]
+    b = [k for k, frame in enumerate(frame_list) if frame[2] == second]
+
+    def effects(rows):
+        rates = changed[rows].sum(axis=0) / usable[rows].sum(axis=0)
+        return rates[:, 0] - rates[:, 1]
+
+    per_frame = effects(np.arange(len(items)))
+    rng = np.random.default_rng(seed)
+    draws = np.empty(n_boot)
+    for b_index in range(n_boot):
+        d = effects(rng.integers(0, len(items), len(items)))
+        draws[b_index] = d[a].mean() - d[b].mean()
+    tail = (1 - level) / 2
+    low, high = np.quantile(draws, [tail, 1 - tail])
+    return {
+        "items": len(items),
+        "first": float(per_frame[a].mean()),
+        "second": float(per_frame[b].mean()),
+        "point": float(per_frame[a].mean() - per_frame[b].mean()),
+        "low": float(low),
+        "high": float(high),
+    }
+
+
+def analyze(trials, frame_list, level=0.99, n_boot=10000, seed=0):
+    """Formal minus plain flip rate, averaged over frames, with items and frames both resampled.
+
+    The interval is a two-way bootstrap: each draw takes items and frames with replacement, so it
+    carries the uncertainty of having sampled these items and these wordings.
+    """
+    items, changed, usable = _flip_counts(trials, frame_list)
 
     def effects(rows):
         rates = changed[rows].sum(axis=0) / usable[rows].sum(axis=0)

@@ -160,6 +160,36 @@ def test_component_means_show_where_the_level_effect_sits():
     assert result["by_component"]["opener"][1] == pytest.approx(result["point"], abs=0.02)
 
 
+def test_predicate_contrast_subtracts_the_level_effects_of_two_predicates():
+    # Formal flips more under predicate 0 (half the items), plain under predicate 2 (a quarter).
+    def changed(frame, level, i):
+        if frame[2] == 0:
+            return level == "hasipsio" and i < 20
+        if frame[2] == 2:
+            return level == "hae" and i < 10
+        return False
+
+    trials = [_trial(i, lambda frame, level, i=i: changed(frame, level, i)) for i in range(40)]
+    result = wordings.predicate_contrast(trials, wordings.frames(), 0, 2, n_boot=300, seed=1)
+    assert result["first"] == pytest.approx(0.5)
+    assert result["second"] == pytest.approx(-0.25)
+    assert result["point"] == pytest.approx(0.75)
+    assert result["low"] <= 0.75 <= result["high"]
+    assert result["low"] > 0.3  # 99% over 40 items: about 0.75 minus 2.6 standard errors of 0.13
+    assert result["items"] == 40
+
+
+def test_predicate_contrast_counts_only_the_frames_it_is_given():
+    # Only one original wording shows a level effect.
+    trials = [
+        _trial(i, lambda frame, level: frame == (0, 0, 2) and level == "hae") for i in range(20)
+    ]
+    new = wordings.predicate_contrast(trials, wordings.new_frames(), 0, 2, n_boot=50, seed=1)
+    every = wordings.predicate_contrast(trials, wordings.frames(), 0, 2, n_boot=50, seed=1)
+    assert new["point"] == pytest.approx(0.0)
+    assert every["point"] == pytest.approx(1 / 9)
+
+
 def test_report_text_gives_the_verdict_in_korean():
     trials = [_trial(i, lambda frame, level: False) for i in range(10)]
     trials += [_trial(i, lambda frame, level: True) for i in range(10, 20)]

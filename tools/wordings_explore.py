@@ -3,7 +3,8 @@
     python tools/wordings_explore.py
 
 Reproduces the pre-registered comparison from shared/trials.csv, then prints intervals for two
-readings of what the 54 frames stand for (after a second outside review), the speech-level
+readings of what the 54 frames stand for (after a second outside review), the difference between
+two predicates, the speech-level
 difference for the frames sharing each opener, subject and predicate with a two-way bootstrap
 interval, how well the per-frame differences of two model settings agree, and the frames with
 the largest differences. Nothing here calls the API. Everything after the first table is
@@ -65,6 +66,16 @@ def main():
             f"  t interval over the 6 predicate means: {100 * means.mean():+.1f}%p "
             f"[{100 * (means.mean() - half):+.1f}, {100 * (means.mean() + half):+.1f}]"
         )
+        # The two predicates that moved apart most on Haiku, with and without the three wordings
+        # of the main experiment, which were part of how this contrast came to be looked at.
+        for label, frame_list in (("51 new", new), ("all 54", wordings.frames())):
+            r = wordings.predicate_contrast(
+                trials, frame_list, 0, 2, n_boot=cfg["n_boot"], seed=cfg["seed"]
+            )
+            print(
+                f"  predicate 0 minus predicate 2, {label} frames: {100 * r['point']:+.1f}%p "
+                f"[{100 * r['low']:+.1f}, {100 * r['high']:+.1f}]"
+            )
         for axis, (name, entries) in enumerate(wordings.COMPONENTS.items()):
             for index, entry in enumerate(entries):
                 shown = entry if isinstance(entry, str) else entry["hasipsio"].strip() or "(none)"
