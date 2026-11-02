@@ -1,0 +1,12 @@
+{
+  "spec": "docs/specs/2026-11-02-confirmation.md",
+  "seed": 20261102,
+  "subjects": ["Health", "Law", "korean-history", "Economics", "Biology", "Computer-Science"],
+  "items_per_subject": 40,
+  "exclude_items": ["results/pilot/items.json", "results/main/items.json"],
+  "repeats": 1,
+  "arms": [["haiku", "off"], ["haiku", "on"], ["sonnet", "off"]],
+  "question_axis_models": [],
+  "max_tokens": 4096,
+  "n_boot": 10000
+}
